@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HoloHead">
+<title>HoloHead Phone</title>
+<link rel="stylesheet" href="css/holohead.css">
+</head>
+<body class="sender">
+  <video id="visitor" autoplay playsinline></video>
+  <div id="selfBox" title="Tap to switch between small and full-screen framing">
+    <video id="self" autoplay playsinline muted></video>
+    <svg id="guide" viewBox="0 0 100 100" preserveAspectRatio="none"><ellipse cx="50" cy="46" rx="32" ry="38"/></svg>
+  </div>
+  <div id="status">Starting…</div>
+  <div id="bar">
+    <button id="mute">Mute</button>
+    <button id="flip">Flip camera</button>
+    <button id="frame">Frame face</button>
+    <button id="reconnect">Reconnect</button>
+  </div>
+  <div id="start">
+    <h1>HoloHead</h1>
+    <p id="startRoom" class="sub"></p>
+    <button id="go">Start</button>
+    <p class="sub">Your camera and mic go to the foam head. You'll see and hear the visitors.<br>
+      Keep this screen open. Put your face inside the yellow oval.</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/sender.js"></script>
+</body>
+</html>

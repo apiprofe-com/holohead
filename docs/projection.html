@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HoloHead Projection</title>
+<link rel="stylesheet" href="css/holohead.css">
+</head>
+<body class="projection">
+  <div id="stage">
+    <div id="sidePane"><iframe id="side" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+    <div id="facePane">
+      <div id="warp">
+        <div id="xform">
+          <div id="masked">
+            <div id="glow"></div>
+            <video id="face" autoplay playsinline></video>
+          </div>
+          <svg id="oval" width="100%" height="100%"><ellipse cx="50%" cy="50%" rx="30%" ry="42%"/></svg>
+        </div>
+        <svg id="grid" width="100%" height="100%">
+          <defs><pattern id="g" width="10%" height="10%" patternUnits="userSpaceOnUse"><path d="M0 0H1000M0 0V1000" /></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#g)"/>
+          <line x1="50%" y1="0" x2="50%" y2="100%"/><line x1="0" y1="50%" x2="100%" y2="50%"/>
+          <rect class="edge" width="100%" height="100%"/>
+        </svg>
+      </div>
+      <div id="idleText">Waiting for Lucas…</div>
+    </div>
+  </div>
+  <div id="blackout"></div>
+  <div id="dot"></div>
+  <button id="soundPrompt" hidden>Click anywhere to turn on sound</button>
+  <div id="notice" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/projection.js"></script>
+</body>
+</html>

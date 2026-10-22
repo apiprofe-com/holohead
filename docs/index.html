@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HoloHead</title>
+<link rel="stylesheet" href="css/holohead.css">
+</head>
+<body>
+  <div class="page" style="max-width:720px">
+    <h1>HoloHead</h1>
+    <p class="sub">A live face on a foam head. The phone sends the face; the iMac projects it.</p>
+
+    <div class="card">
+      <h2>1. Room code</h2>
+      <p class="sub" style="margin-bottom:10px">The phone and the iMac must use the same code. Keep it private: anyone with it can call the head.</p>
+      <div class="row">
+        <input id="room" type="text" style="flex:1" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <button id="newRoom">New code</button>
+      </div>
+    </div>
+
+    <div class="card links">
+      <h2>2. Open the pages</h2>
+      <a id="lSender" href="#">📱 Phone (Lucas): sender</a>
+      <a id="lProjection" href="#">🎭 Projector screen: projection</a>
+      <a id="lConsole" href="#">🎛 iMac screen: console</a>
+      <p class="sub" style="margin:10px 0 0">On the iPhone, open the phone link in Safari, then Share → Add to Home Screen.</p>
+    </div>
+
+    <div class="card">
+      <h2>3. Relay (optional, for strict networks)</h2>
+      <p class="sub">Only needed if the call won't connect on the campus network. Get free credentials from
+        Metered (metered.ca) or Cloudflare Calls, and enter them on <b>both</b> the phone and the iMac.
+        They're saved in this browser only.</p>
+      <div class="field"><label>TURN server addresses (separate with spaces), e.g. <code>turn:host:80 turns:host:443?transport=tcp</code></label>
+        <input id="turnUrls" type="text" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>Username</label><input id="turnUser" type="text" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>Password</label><input id="turnPass" type="password" autocomplete="off"></div>
+      <label class="row"><input id="forceRelay" type="checkbox"> Force relay (testing only: always go through TURN)</label>
+      <div class="row" style="margin-top:12px"><button id="save">Save relay settings</button><span id="saved" class="sub" style="margin:0"></span></div>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    (() => {
+      const $ = id => document.getElementById(id);
+      const roomInput = $('room');
+      roomInput.value = HH.room() || HH.newRoomCode();
+
+      function updateLinks() {
+        const r = roomInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+        try { localStorage.setItem(HH.KEYS.room, r); } catch (e) {}
+        for (const [id, page] of [['lSender', 'sender'], ['lProjection', 'projection'], ['lConsole', 'console']]) {
+          const url = new URL(`${page}.html?room=${r}`, location.href).href;
+          $(id).href = url;
+          $(id).dataset.url = url;
+        }
+      }
+      roomInput.addEventListener('input', updateLinks);
+      $('newRoom').addEventListener('click', () => { roomInput.value = HH.newRoomCode(); updateLinks(); });
+      updateLinks();
+
+      const s = HH.settings();
+      $('turnUrls').value = s.turnUrls;
+      $('turnUser').value = s.turnUser;
+      $('turnPass').value = s.turnPass;
+      $('forceRelay').checked = s.forceRelay;
+      $('save').addEventListener('click', () => {
+        HH.save(HH.KEYS.settings, {
+          turnUrls: $('turnUrls').value.trim(), turnUser: $('turnUser').value.trim(),
+          turnPass: $('turnPass').value, forceRelay: $('forceRelay').checked,
+        });
+        $('saved').textContent = 'Saved. Reload any open HoloHead pages.';
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HoloHead Console</title>
+<link rel="stylesheet" href="css/holohead.css">
+</head>
+<body>
+  <div class="page">
+    <h1>HoloHead Console</h1>
+    <p class="sub">Room <code id="room">—</code> · <a id="phoneLink" href="#">phone link</a> · <a href="index.html">settings</a></p>
+
+    <div id="oneScreen" class="warn" hidden>Only one screen detected. The face is showing in TV mode on the main screen.
+      Plug in the projector, set Displays to <b>Extended</b>, then press <b>Reload projection</b>.</div>
+    <div id="noCam" class="warn" hidden></div>
+
+    <div class="console-grid">
+      <div>
+        <div class="card">
+          <h2>Status</h2>
+          <div class="stat"><span>Console link</span><span id="sLink" class="pill">connecting</span></div>
+          <div class="stat"><span>Projection</span><span id="sPeer" class="pill">—</span></div>
+          <div class="stat"><span>Lucas</span><span id="sLive" class="pill">—</span></div>
+          <div class="stat"><span>Route</span><span id="sRoute">—</span></div>
+          <div class="stat"><span>Bitrate</span><span id="sKbps">—</span></div>
+          <div class="stat"><span>Packet loss</span><span id="sLoss">—</span></div>
+          <div class="stat"><span>Picture</span><span id="sRes">—</span></div>
+          <div class="stat"><span>Delay (round trip)</span><span id="sRtt">—</span></div>
+          <div class="meter" title="iMac microphone level"><div id="mic"></div></div>
+        </div>
+        <div class="card">
+          <h2>Visitor camera</h2>
+          <video id="preview" autoplay playsinline muted></video>
+          <p class="sub" id="previewNote" style="margin:8px 0 0">This computer's camera, i.e. what Lucas sees.</p>
+        </div>
+        <div class="card">
+          <h2>Actions</h2>
+          <div class="row">
+            <button data-toggle="test">Test pattern</button>
+            <button data-toggle="blackout">Black-out</button>
+            <button data-toggle="tv">TV mode</button>
+            <button data-toggle="mirror">Mirror</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button id="reconnect">Reconnect call</button>
+            <button id="reload">Reload projection</button>
+            <button id="reset">Reset calibration</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="controls" class="controls"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/console.js"></script>
+</body>
+</html>

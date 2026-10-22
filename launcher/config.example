@@ -1,0 +1,22 @@
+# HoloHead settings. install.sh copies this to config.local and fills in a room code.
+# Edit config.local (not this file), then quit and restart HoloHead.
+
+# Room code shared with the phone. Keep it private: anyone with it can call the head.
+ROOM=""
+
+# Where the web pages live.
+BASE_URL="https://apiprofe-com.github.io/holohead"
+
+# Leave empty to auto-detect. Set the full path if Chrome is somewhere unusual.
+CHROME_APP=""
+
+# Leave empty to auto-detect the projector screen. Otherwise "x,y" of its top-left corner,
+# e.g. "-1920,455" for a 1080p screen placed to the left of a 27" iMac.
+PROJ_POS=""
+
+# Optional relay for strict networks (free tier from Metered or Cloudflare).
+TURN_URLS=""
+TURN_USER=""
+TURN_PASS=""
+# 1 = always use the relay (testing only)
+FORCE_RELAY=0

@@ -1,0 +1,8 @@
+# Personal notes and machine details stay off GitHub
+NOTES.md
+PROMPT.md
+CLAUDE.md
+launcher/config.local
+*.log
+profile-*/
+.DS_Store
