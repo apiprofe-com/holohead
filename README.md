@@ -96,6 +96,9 @@ Under **Screen layout**:
 - Choose **Split** or **Face only**.
 - Choose which side the face goes on and how wide it is.
 - Choose what plays in the other half. Paste any YouTube link; it plays muted.
+- **While Lucas is offline:** the default is **screensaver**, where the side video fills the
+  whole screen until you call in. The other choices are a soft glow, black, or "Waiting for
+  Lucas…".
 
 **Black-out** blanks the whole projector instantly.
 

@@ -111,7 +111,7 @@
       <div class="field"><label>Side video or page (YouTube links work)</label>
         <input data-key="sideUrl" type="text" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="field"><label>While Lucas is offline</label>
-        <select data-key="idle"><option value="glow">Soft glow</option><option value="black">Black</option><option value="text">"Waiting for Lucas…"</option></select></div>
+        <select data-key="idle"><option value="side">Side video fills the screen (screensaver)</option><option value="glow">Soft glow</option><option value="black">Black</option><option value="text">"Waiting for Lucas…"</option></select></div>
       <div class="field"><label>Status dot in the corner</label>
         <select data-key="showDot"><option value="false">Hidden</option><option value="true">Shown</option></select></div>`;
     card.querySelectorAll('[data-key]').forEach(el => {

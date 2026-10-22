@@ -16,7 +16,7 @@ const HH = (() => {
     // Oval mask, radii in % of the pane, feather in % of the radius
     maskW: 30, maskH: 42, feather: 18,
     // Modes
-    tv: false, test: false, blackout: false, idle: 'glow', showDot: false,
+    tv: false, test: false, blackout: false, idle: 'side', showDot: false,
     // Split screen: 'face' only, or 'split' (face + side pane)
     layout: 'split', faceSide: 'right', faceWidth: 50, sideUrl: CORAL_EMBED,
   };

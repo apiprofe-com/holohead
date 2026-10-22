@@ -40,9 +40,12 @@
     $('dot').style.display = c.showDot ? 'block' : 'none';
 
     // Split screen
-    const split = c.layout === 'split' && c.sideUrl;
+    // Screensaver: while Lucas is offline the side video fills the whole screen.
+    const saver = !live && c.idle === 'side' && !!c.sideUrl && !c.test;
+    const split = (c.layout === 'split' || saver) && c.sideUrl;
     const side = $('sidePane');
     side.style.display = split ? 'block' : 'none';
+    $('facePane').style.display = saver ? 'none' : 'block';
     $('facePane').style.flexBasis = split ? `${c.faceWidth}%` : '100%';
     $('stage').style.flexDirection = c.faceSide === 'left' ? 'row' : 'row-reverse';
     const url = HH.toEmbedUrl(c.sideUrl);
@@ -67,7 +70,7 @@
     }
 
     const pane = $('facePane').getBoundingClientRect();
-    $('warp').style.transform = quadTransform(pane.width, pane.height, c.warp);
+    if (pane.width) $('warp').style.transform = quadTransform(pane.width, pane.height, c.warp);
     $('xform').style.transform =
       `translate(${c.x}%, ${c.y}%) rotate(${c.rotate}deg) scale(${c.scale}) scaleX(${c.mirror ? -1 : 1})`;
     video.style.transform = `translate(${c.faceX}%, ${c.faceY}%) scale(${c.zoom})`;
