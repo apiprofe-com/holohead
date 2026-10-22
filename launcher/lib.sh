@@ -13,6 +13,7 @@ TURN_URLS=""         # optional relay, e.g. "turn:host:80 turns:host:443?transpo
 TURN_USER=""
 TURN_PASS=""
 FORCE_RELAY=0
+DEBUG_PORT=""        # e.g. 9333 to let tools inspect the projection window (local only)
 
 [ -f "$HH_DIR/config.local" ] && . "$HH_DIR/config.local"
 

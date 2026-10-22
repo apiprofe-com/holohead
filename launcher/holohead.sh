@@ -54,7 +54,7 @@ start_projection() {
   else
     log "Projection on the screen at $pos."
   fi
-  "$CHROME_BIN" --user-data-dir="$HH_DIR/profile-projection" "${FLAGS[@]}" \
+  "$CHROME_BIN" --user-data-dir="$HH_DIR/profile-projection" "${FLAGS[@]}" ${DEBUG_PORT:+--remote-debugging-port=$DEBUG_PORT} \
     --kiosk --app="$(page_url projection "$extra")" --window-position="$pos" >/dev/null 2>&1 &
   PROJ_PID=$!
 }
