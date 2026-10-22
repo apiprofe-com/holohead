@@ -17,8 +17,20 @@ The phone and iMac talk to each other directly (WebRTC). The free PeerJS service
 using the room code. Everything is **outgoing** on normal web ports (443), so nothing has to be
 opened on the network.
 
-If the campus network blocks the direct route, add a free **TURN relay** (Metered or Cloudflare).
-On the phone, enter it on the home page. On the iMac, put it in `config.local`.
+Cellular and campus networks usually block the direct route. That's why there's a built-in
+**relay**, Cloudflare's TURN service (free up to a large monthly allowance):
+
+- Cloudflare's relay passwords last at most two days. The GitHub Action
+  `.github/workflows/turn.yml` fetches new ones every 12 hours.
+- It encrypts them with each room code and publishes them as `docs/turn.json`.
+- The pages download that file and unlock it with their room code, so the plain phone link keeps
+  working with nothing to type.
+
+Repo secrets: `CF_TURN_KEY_ID`, `CF_TURN_API_TOKEN`, and `HOLOHEAD_ROOMS`.
+- `HOLOHEAD_ROOMS` is a comma-separated list of the room codes allowed to use the relay. **When
+  you change the room code, update this secret** and run the workflow (Actions → Refresh relay
+  credentials → Run workflow).
+- To use a different relay, enter it on the home page (phone) or in `config.local` (iMac).
 
 ## Set up the iMac (once)
 

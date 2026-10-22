@@ -88,9 +88,9 @@
 
   function setStatus(text) { $('status').textContent = text; }
 
-  function startPeer() {
+  async function startPeer() {
     setStatus('Connecting…');
-    peer = new Peer({ config: HH.iceConfig(), debug: 1 });
+    peer = new Peer({ config: await HH.iceConfig(), debug: 1 });
     peer.on('open', placeCall);
     peer.on('disconnected', () => {
       // Lost the signaling server; an active call can keep running without it.
@@ -123,9 +123,13 @@
     }, retry.next());
   }
 
-  function placeCall() {
+  async function placeCall() {
     if (call) { try { call.close(); } catch (e) {} }
     setStatus('Calling the head…');
+    // Relay passwords expire after two days; pick up the current ones for every call.
+    const config = await HH.iceConfig();
+    if (!peer || peer.destroyed || !peer.open) return scheduleCall();
+    peer.options.config = config;
     const c = peer.call(HH.headId(room), localStream);
     call = c;
     lastStats = null;

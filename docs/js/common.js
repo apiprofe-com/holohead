@@ -72,12 +72,46 @@ const HH = (() => {
     return s;
   }
 
-  function iceConfig() {
+  // ICE servers: Google STUN, plus a TURN relay. A relay typed in by hand (or passed in the address)
+  // wins; otherwise use the shared relay that a GitHub Action refreshes twice a day in turn.json,
+  // encrypted with the room code so only people who know the room can use it.
+  async function iceConfig() {
     const s = settings();
     const iceServers = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
     const turnUrls = s.turnUrls.split(/[\s,]+/).filter(Boolean);
     if (turnUrls.length) iceServers.push({ urls: turnUrls, username: s.turnUser, credential: s.turnPass });
+    else iceServers.push(...await sharedRelay());
     return { iceServers, iceTransportPolicy: s.forceRelay ? 'relay' : 'all' };
+  }
+
+  let relayCache = { at: 0, servers: [] };
+
+  async function sharedRelay() {
+    const r = room();
+    if (!r) return [];
+    if (Date.now() - relayCache.at < 30 * 60 * 1000) return relayCache.servers;
+    try {
+      const res = await fetch(new URL('turn.json', document.baseURI), { cache: 'no-store' });
+      const file = await res.json();
+      for (const entry of file.entries || []) {
+        const servers = await decryptEntry(entry, r).catch(() => null);
+        if (servers) {
+          relayCache = { at: Date.now(), servers };
+          return servers;
+        }
+      }
+    } catch (e) { /* no relay file yet, or offline: direct connections only */ }
+    return [];
+  }
+
+  async function decryptEntry(entry, r) {
+    const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(r), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: b64(entry.salt), iterations: entry.iterations },
+      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(entry.iv) }, key, b64(entry.data));
+    return JSON.parse(new TextDecoder().decode(plain)).iceServers;
   }
 
   function backoff(min = 1000, max = 30000) {
@@ -139,6 +173,6 @@ const HH = (() => {
 
   return {
     KEYS, DEFAULT_CALIB, DEFAULT_SETTINGS, params,
-    load, save, room, newRoomCode, headId, settings, iceConfig, backoff, toEmbedUrl, callStats, keepAwake,
+    load, save, room, newRoomCode, headId, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, callStats, keepAwake,
   };
 })();

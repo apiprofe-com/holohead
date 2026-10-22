@@ -174,9 +174,9 @@
 
   // ---------- Link to the projection ----------
 
-  function connect() {
+  async function connect() {
     pill('sLink', 'connecting', 'warn');
-    peer = new Peer({ config: HH.iceConfig(), debug: 1 });
+    peer = new Peer({ config: await HH.iceConfig(), debug: 1 });
     peer.on('open', () => {
       conn = peer.connect(HH.headId(room), { metadata: { role: 'console' }, reliable: true });
       conn.on('open', () => { retry.reset(); pill('sLink', 'connected', 'good'); });

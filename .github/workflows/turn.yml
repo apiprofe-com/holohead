@@ -1,0 +1,42 @@
+# Refresh the shared relay (TURN) credentials. Cloudflare's passwords last at most two days,
+# so this runs every 12 hours and publishes them, encrypted per room code, in docs/turn.json.
+# Secrets: CF_TURN_KEY_ID, CF_TURN_API_TOKEN, HOLOHEAD_ROOMS (comma-separated room codes).
+name: Refresh relay credentials
+
+on:
+  schedule:
+    - cron: '17 */12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: turn-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate docs/turn.json
+        run: node scripts/make-turn.mjs
+        env:
+          CF_TURN_KEY_ID: ${{ secrets.CF_TURN_KEY_ID }}
+          CF_TURN_API_TOKEN: ${{ secrets.CF_TURN_API_TOKEN }}
+          HOLOHEAD_ROOMS: ${{ secrets.HOLOHEAD_ROOMS }}
+
+      - name: Publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/turn.json
+          git commit -m "Refresh relay credentials" || exit 0
+          git pull --rebase
+          git push

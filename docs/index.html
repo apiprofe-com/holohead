@@ -29,10 +29,10 @@
     </div>
 
     <div class="card">
-      <h2>3. Relay (optional, for strict networks)</h2>
-      <p class="sub">Only needed if the call won't connect on the campus network. Get free credentials from
-        Metered (metered.ca) or Cloudflare Calls, and enter them on <b>both</b> the phone and the iMac.
-        They're saved in this browser only.</p>
+      <h2>3. Relay (automatic)</h2>
+      <p class="sub">A shared Cloudflare relay is built in for registered room codes, so calls connect
+        even when cellular or campus networks block a direct connection. Only fill this in to use a
+        different relay. It's saved in this browser only.</p>
       <div class="field"><label>TURN server addresses (separate with spaces), e.g. <code>turn:host:80 turns:host:443?transport=tcp</code></label>
         <input id="turnUrls" type="text" autocomplete="off" spellcheck="false"></div>
       <div class="field"><label>Username</label><input id="turnUser" type="text" autocomplete="off" spellcheck="false"></div>

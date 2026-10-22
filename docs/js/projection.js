@@ -26,6 +26,11 @@
   window.addEventListener('resize', applyCalib);
   startLocalMedia().then(startPeer);
   setInterval(sendStatus, 1000);
+  // Relay passwords expire after two days; keep the ones used for incoming calls current.
+  setInterval(async () => {
+    const config = await HH.iceConfig();
+    if (peer && !peer.destroyed) peer.options.config = config;
+  }, 30 * 60 * 1000);
 
   // ---------- Layout and calibration ----------
 
@@ -149,9 +154,9 @@
 
   // ---------- Peer connection ----------
 
-  function startPeer() {
+  async function startPeer() {
     peerState = 'connecting';
-    peer = new Peer(HH.headId(room), { config: HH.iceConfig(), debug: 1 });
+    peer = new Peer(HH.headId(room), { config: await HH.iceConfig(), debug: 1 });
 
     peer.on('open', () => { peerState = 'ready'; retry.reset(); setDot(); });
     peer.on('call', answer);
