@@ -11,6 +11,7 @@
   let retryTimer = null;
   let answerTimer = null;
   let lastStats = null;
+  let failures = 0;
 
   if (!room) {
     $('startRoom').textContent = 'No room code. Open the link from the HoloHead home page.';
@@ -133,23 +134,40 @@
     clearTimeout(answerTimer);
     answerTimer = setTimeout(() => { if (call === c && !$('visitor').srcObject) dropAndRetry(c, 'No answer. Retrying…'); }, 20000);
 
-    c.on('stream', stream => {
-      if (call !== c) return;
+    // The stream event fires before the network path is up; only call it live once connected.
+    const pc = c.peerConnection;
+    let remote = null;
+    const goLiveIfReady = () => {
+      if (call !== c || !remote || pc.connectionState !== 'connected' || $('visitor').srcObject) return;
       clearTimeout(answerTimer);
       retry.reset();
-      $('visitor').srcObject = stream;
+      failures = 0;
+      $('visitor').srcObject = remote;
       $('visitor').play().catch(() => {});
       setStatus('Live');
+    };
+    c.on('stream', stream => {
+      if (call !== c) return;
+      remote = stream;
+      setStatus('Head answered. Connecting video…');
+      goLiveIfReady();
     });
     c.on('close', () => { if (call === c) dropAndRetry(c, 'Call ended. Reconnecting…'); });
     c.on('error', () => { if (call === c) dropAndRetry(c, 'Call error. Reconnecting…'); });
 
-    const pc = c.peerConnection;
     let lostTimer = null;
     pc.addEventListener('connectionstatechange', () => {
       clearTimeout(lostTimer);
       if (call !== c) return;
-      if (pc.connectionState === 'failed') dropAndRetry(c, 'Connection lost. Reconnecting…');
+      goLiveIfReady();
+      if (pc.connectionState === 'failed') {
+        // Never connected: the networks are blocking a direct path. A TURN relay fixes that.
+        if (!$('visitor').srcObject) failures++;
+        const hint = failures >= 2 && !HH.settings().turnUrls
+          ? 'Direct connection blocked by the network. Set up a relay (see home page). Retrying…'
+          : 'Connection lost. Reconnecting…';
+        dropAndRetry(c, hint);
+      }
       if (pc.connectionState === 'disconnected') {
         setStatus('Connection shaky…');
         lostTimer = setTimeout(() => { if (call === c) dropAndRetry(c, 'Connection lost. Reconnecting…'); }, 8000);

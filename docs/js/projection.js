@@ -176,24 +176,29 @@
 
   function answer(call) {
     if (activeCall) { try { activeCall.close(); } catch (e) {} }
+    if (live) setLive(false);
     activeCall = call;
     lastStats = null;
     call.answer(localStream || undefined);
-    call.on('stream', stream => {
-      if (activeCall !== call) return;
+    // Only go live once media can actually flow: the stream event fires before the network path is up.
+    const pc = call.peerConnection;
+    let remote = null;
+    const goLiveIfReady = () => {
+      if (activeCall !== call || !remote || pc.connectionState !== 'connected' || live) return;
       const video = $('face');
-      video.srcObject = stream;
+      video.srcObject = remote;
       playWithSound(video);
       setLive(true);
-    });
+    };
+    call.on('stream', stream => { remote = stream; goLiveIfReady(); });
     call.on('close', () => { if (activeCall === call) { activeCall = null; setLive(false); } });
     call.on('error', () => { if (activeCall === call) { activeCall = null; setLive(false); } });
 
     // Drop calls whose network path died, so the sender's reconnect gets a clean slate.
-    const pc = call.peerConnection;
     let lostTimer = null;
     pc.addEventListener('connectionstatechange', () => {
       clearTimeout(lostTimer);
+      goLiveIfReady();
       if (pc.connectionState === 'failed') call.close();
       if (pc.connectionState === 'disconnected') lostTimer = setTimeout(() => call.close(), 8000);
     });
