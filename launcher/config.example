@@ -14,6 +14,10 @@ CHROME_APP=""
 # e.g. "-1920,455" for a 1080p screen placed to the left of a 27" iMac.
 PROJ_POS=""
 
+# Lucas on the iMac screen too: "window" (big window; double-click it for full screen),
+# "fullscreen" (takes over the iMac screen), or "off".
+VIEWER="window"
+
 # Optional relay for strict networks (free tier from Metered or Cloudflare).
 TURN_URLS=""
 TURN_USER=""

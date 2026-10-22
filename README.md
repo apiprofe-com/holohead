@@ -8,7 +8,11 @@ installs nothing system-wide, and never needs an admin password.
 - **Phone:** `sender.html?room=CODE`. Your camera and mic go to the head, and you see the visitors.
 - **Projector:** `projection.html?room=CODE`. Only your face on black. In split mode the
   screen is shared with a side video (the Coral City Camera livestream by default).
-- **iMac screen:** `console.html?room=CODE`. Status, camera preview, and every calibration
+- **iMac screen, for people:** `viewer.html?room=CODE`. Lucas's face, big, like a video call, so
+  students standing at the iMac (where the camera and mic are) see him too. It shows the side video
+  while he's away. Double-click for full screen. Set `VIEWER` in `config.local` to `window`,
+  `fullscreen` or `off`.
+- **iMac screen, for you:** `console.html?room=CODE`. Status, camera preview, and every calibration
   control. It also works from a laptop or phone standing next to the head.
 
 ## How it connects

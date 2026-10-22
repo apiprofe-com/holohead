@@ -43,6 +43,17 @@ start_console() {
     --app="$(page_url console)" --window-position=60,60 --window-size=1400,950 >/dev/null 2>&1 &
 }
 
+# Lucas's face on the iMac screen too, for people standing at the iMac (camera and mic are there).
+start_viewer() {
+  [ "$VIEWER" = "off" ] && return
+  local main w h mode
+  main="$(list_screens | awk '$5 == "main" { print $3, $4; exit }')"
+  w="${main% *}"; h="${main#* }"
+  if [ "$VIEWER" = "fullscreen" ]; then mode=(--kiosk); else mode=(--window-size="$w,$((h - 40))"); fi
+  "$CHROME_BIN" --user-data-dir="$HH_DIR/profile-viewer" "${FLAGS[@]}" "${mode[@]}" \
+    --app="$(page_url viewer)" --window-position=0,25 >/dev/null 2>&1 &
+}
+
 start_projection() {
   local other pos extra=""
   other="$(list_screens | awk '$5 == "other" { print $1 "," $2; exit }')"
@@ -63,6 +74,8 @@ log "Starting HoloHead (room $ROOM, Chrome at $CHROME)."
 start_projection
 sleep 3
 start_console
+sleep 2
+start_viewer
 
 # Watchdog: reopen the projection if it closes or crashes (but give up if it keeps dying).
 crashes=()

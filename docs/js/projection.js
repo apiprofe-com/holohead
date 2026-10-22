@@ -14,6 +14,7 @@
   let lastStats = null;
   let micLevel = 0;
   const consoles = new Set();
+  const feeds = new Map(); // viewer connection -> call forwarding Lucas's video to it
   const retry = HH.backoff();
 
   if (!room) {
@@ -226,6 +227,26 @@
     if (!on) $('face').srcObject = null;
     applyCalib();
     setDot();
+    if (on) consoles.forEach(feedViewer);
+    else { feeds.forEach(f => { try { f.close(); } catch (e) {} }); feeds.clear(); }
+  }
+
+  // Viewers (viewer.html on the iMac screen) get a copy of Lucas's video while he's live.
+  function feedViewer(conn) {
+    if (!live || !peer || feeds.has(conn) || !conn.open || !conn.metadata || conn.metadata.role !== 'viewer') return;
+    const stream = $('face').srcObject;
+    if (!stream) return;
+    const feed = peer.call(conn.peer, stream, { metadata: { role: 'feed' } });
+    feeds.set(conn, feed);
+    const drop = () => { if (feeds.get(conn) === feed) feeds.delete(conn); };
+    feed.on('close', drop);
+    feed.on('error', drop);
+  }
+
+  function detachConsole(conn) {
+    consoles.delete(conn);
+    const feed = feeds.get(conn);
+    if (feed) { feeds.delete(conn); try { feed.close(); } catch (e) {} }
   }
 
   function setDot() {
@@ -238,6 +259,7 @@
     conn.on('open', () => {
       consoles.add(conn);
       conn.send({ t: 'calib', calib });
+      feedViewer(conn);
     });
     conn.on('data', msg => {
       if (!msg || typeof msg !== 'object') return;
@@ -253,8 +275,8 @@
       }
       if (msg.t === 'cmd' && msg.cmd === 'reload') location.reload();
     });
-    conn.on('close', () => consoles.delete(conn));
-    conn.on('error', () => consoles.delete(conn));
+    conn.on('close', () => detachConsole(conn));
+    conn.on('error', () => detachConsole(conn));
   }
 
   async function sendStatus() {
