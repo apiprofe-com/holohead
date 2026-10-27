@@ -68,8 +68,7 @@
     document.body.classList.remove('live');
     $('lucas').srcObject = null;
     const url = calib.sideUrl ? HH.toEmbedUrl(calib.sideUrl) : '';
-    const frame = $('idleVideo');
-    if (frame.dataset.src !== url) { frame.dataset.src = url; frame.src = url || 'about:blank'; }
+    HH.playVideo($('idleVideo'), url);
     $('idleText').style.display = url ? 'none' : 'flex';
   }
 })();

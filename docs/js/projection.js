@@ -25,7 +25,7 @@
   HH.keepAwake();
   applyCalib();
   window.addEventListener('resize', applyCalib);
-  startLocalMedia().then(startPeer);
+  startPeer();
   setInterval(sendStatus, 1000);
   // Relay passwords expire after two days; keep the ones used for incoming calls current.
   setInterval(async () => {
@@ -54,15 +54,7 @@
     $('facePane').style.display = saver ? 'none' : 'block';
     $('facePane').style.flexBasis = split ? `${c.faceWidth}%` : '100%';
     $('stage').style.flexDirection = c.faceSide === 'left' ? 'row' : 'row-reverse';
-    const url = HH.toEmbedUrl(c.sideUrl);
-    if (split && $('side').dataset.src !== url) {
-      $('side').dataset.src = url;
-      $('side').src = url;
-    }
-    if (!split && $('side').dataset.src) {
-      $('side').dataset.src = '';
-      $('side').src = 'about:blank';
-    }
+    HH.playVideo($('side'), split ? HH.toEmbedUrl(c.sideUrl) : '');
 
     const video = $('face');
     video.style.filter = `brightness(${c.brightness}) contrast(${c.contrast}) saturate(${c.saturate})`;
@@ -122,18 +114,29 @@
   }
 
   // ---------- Camera and mic of the iMac (so Lucas can see visitors) ----------
+  // Only on during a call, so the camera light is off while nobody is calling.
 
   async function startLocalMedia() {
+    if (localStream) return;
     try {
       localStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
+      camError = '';
       watchMic(localStream);
     } catch (e) {
       camError = `${e.name}: ${e.message}`;
       localStream = null;
     }
+  }
+
+  function stopLocalMedia() {
+    if (!localStream) return;
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+    if (watchMic.stop) watchMic.stop();
+    micLevel = 0;
   }
 
   function watchMic(stream) {
@@ -143,13 +146,14 @@
       analyser.fftSize = 512;
       ctx.createMediaStreamSource(stream).connect(analyser);
       const data = new Uint8Array(analyser.fftSize);
-      setInterval(() => {
+      const timer = setInterval(() => {
         if (ctx.state === 'suspended') ctx.resume().catch(() => {});
         analyser.getByteTimeDomainData(data);
         let peak = 0;
         for (const v of data) peak = Math.max(peak, Math.abs(v - 128));
         micLevel = Math.max(peak / 128, micLevel * 0.8);
       }, 100);
+      watchMic.stop = () => { clearInterval(timer); ctx.close().catch(() => {}); watchMic.stop = null; };
     } catch (e) { /* meter is optional */ }
   }
 
@@ -180,11 +184,13 @@
     setTimeout(startPeer, retry.next());
   }
 
-  function answer(call) {
+  async function answer(call) {
     if (activeCall) { try { activeCall.close(); } catch (e) {} }
     if (live) setLive(false);
     activeCall = call;
     lastStats = null;
+    await startLocalMedia();
+    if (activeCall !== call) return;
     call.answer(localStream || undefined);
     // Only go live once media can actually flow: the stream event fires before the network path is up.
     const pc = call.peerConnection;
@@ -197,8 +203,9 @@
       setLive(true);
     };
     call.on('stream', stream => { remote = stream; goLiveIfReady(); });
-    call.on('close', () => { if (activeCall === call) { activeCall = null; setLive(false); } });
-    call.on('error', () => { if (activeCall === call) { activeCall = null; setLive(false); } });
+    const ended = () => { if (activeCall === call) { activeCall = null; setLive(false); stopLocalMedia(); } };
+    call.on('close', ended);
+    call.on('error', ended);
 
     // Drop calls whose network path died, so the sender's reconnect gets a clean slate.
     let lostTimer = null;
@@ -287,7 +294,7 @@
       t: 'status', room, peer: peerState, live,
       stats: live ? lastStats : null,
       mic: Math.round(micLevel * 100) / 100,
-      cam: !!localStream, camError,
+      cam: !camError, camError,
       extended: window.screen.isExtended,
       forcedTv,
       relayForced: HH.settings().forceRelay,

@@ -16,7 +16,7 @@ const HH = (() => {
     // Oval mask, radii in % of the pane, feather in % of the radius
     maskW: 30, maskH: 42, feather: 18,
     // Modes
-    tv: false, test: false, blackout: false, idle: 'side', showDot: false,
+    tv: false, test: false, blackout: false, idle: 'glow', showDot: false,
     // Split screen: 'face' only, or 'split' (face + side pane)
     layout: 'split', faceSide: 'right', faceWidth: 50, sideUrl: CORAL_EMBED,
   };
@@ -130,6 +130,68 @@ const HH = (() => {
     return u;
   }
 
+  // Play a side video in an iframe and keep it playing. YouTube players sometimes stall or show an
+  // error after running for days (e.g. "152 - 18"), so reload when the player reports an error or
+  // hasn't been playing for two minutes, and every six hours regardless.
+  function playVideo(frame, url) {
+    if (frame.dataset.src === (url || '')) return;
+    frame.dataset.src = url || '';
+    frame.src = url ? withPlayerApi(url) : 'about:blank';
+    if (frame.hhWatched) return;
+    frame.hhWatched = true;
+    let lastPlaying = Date.now();
+    let loadedAt = Date.now();
+    let lastTime = null;
+    let retryTimer = null;
+    let retryDelay = 15000;
+    const reload = () => {
+      if (!frame.dataset.src) return;
+      lastPlaying = loadedAt = Date.now();
+      frame.src = withPlayerApi(frame.dataset.src);
+    };
+    frame.addEventListener('load', () => {
+      lastPlaying = Date.now();
+      // Ask the YouTube player to report its state and errors to this page.
+      const say = msg => { try { frame.contentWindow.postMessage(JSON.stringify(msg), '*'); } catch (e) {} };
+      say({ event: 'listening', id: 1, channel: 'widget' });
+      say({ event: 'command', func: 'addEventListener', args: ['onError'], id: 1, channel: 'widget' });
+      say({ event: 'command', func: 'addEventListener', args: ['onStateChange'], id: 1, channel: 'widget' });
+    });
+    window.addEventListener('message', e => {
+      if (e.source !== frame.contentWindow || !/youtube/.test(e.origin)) return;
+      let d;
+      try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+      if (!d) return;
+      const info = d.info || {};
+      const state = d.event === 'onStateChange' ? d.info : info.playerState;
+      // Playing, or the clock moved forward since the last report.
+      if (state === 1 || (typeof info.currentTime === 'number' && lastTime !== null && info.currentTime > lastTime)) {
+        lastPlaying = Date.now();
+        retryDelay = 15000;
+      }
+      if (typeof info.currentTime === 'number') lastTime = info.currentTime;
+      if (d.event === 'onError' && !retryTimer) {
+        // Wait longer after each failed try: 15 s, 30 s, 1 min… up to 10 min.
+        retryTimer = setTimeout(() => { retryTimer = null; reload(); }, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 600000);
+      }
+    });
+    setInterval(() => {
+      if (!frame.dataset.src || !/youtube\.com\/embed\//.test(frame.dataset.src)) return;
+      if (document.visibilityState === 'hidden' || getComputedStyle(frame).visibility === 'hidden' || !frame.offsetWidth) {
+        lastPlaying = Date.now();
+        return;
+      }
+      if (retryTimer) return;
+      if (Date.now() - lastPlaying > 120000 || Date.now() - loadedAt > 6 * 3600000) reload();
+    }, 30000);
+  }
+
+  function withPlayerApi(url) {
+    if (!/youtube\.com\/embed\//.test(url) || /enablejsapi=/.test(url)) return url;
+    return `${url}${url.includes('?') ? '&' : '?'}enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
+  }
+
   // Summarise an RTCPeerConnection: direct vs relay, incoming bitrate, loss, resolution.
   async function callStats(pc, prev) {
     const out = { route: '?', kbps: 0, lossPct: 0, res: '', rtt: null, bytes: 0, at: performance.now() };
@@ -173,6 +235,6 @@ const HH = (() => {
 
   return {
     KEYS, DEFAULT_CALIB, DEFAULT_SETTINGS, params,
-    load, save, room, newRoomCode, headId, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, callStats, keepAwake,
+    load, save, room, newRoomCode, headId, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, playVideo, callStats, keepAwake,
   };
 })();

@@ -50,7 +50,6 @@
 
   buildControls();
   bindActions();
-  startPreview();
   connect();
   setInterval(() => { if (Date.now() - lastStatusAt > 4000) markStale(); }, 2000);
 
@@ -111,7 +110,7 @@
       <div class="field"><label>Side video or page (YouTube links work)</label>
         <input data-key="sideUrl" type="text" placeholder="https://www.youtube.com/watch?v=…"></div>
       <div class="field"><label>While Lucas is offline</label>
-        <select data-key="idle"><option value="side">Side video fills the screen (screensaver)</option><option value="glow">Soft glow</option><option value="black">Black</option><option value="text">"Waiting for Lucas…"</option></select></div>
+        <select data-key="idle"><option value="glow">Soft glow (halo) on the head</option><option value="side">Side video fills the screen (screensaver)</option><option value="black">Black</option><option value="text">"Waiting for Lucas…"</option></select></div>
       <div class="field"><label>Status dot in the corner</label>
         <select data-key="showDot"><option value="false">Hidden</option><option value="true">Shown</option></select></div>`;
     card.querySelectorAll('[data-key]').forEach(el => {
@@ -215,6 +214,7 @@
     $('sLoss').textContent = s.live ? `${st.lossPct || 0}%` : '—';
     $('sRes').textContent = s.live && st.res ? st.res : '—';
     $('sRtt').textContent = s.live && st.rtt != null ? `${st.rtt} ms` : '—';
+    preview(s.live);
     $('mic').style.width = `${Math.min(100, s.mic * 140)}%`;
     $('oneScreen').hidden = !(s.forcedTv || s.extended === false);
     $('noCam').hidden = s.cam;
@@ -223,6 +223,7 @@
 
   function markStale() {
     pill('sPeer', 'no news from projection', 'bad');
+    preview(false);
   }
 
   function pill(id, text, cls) {
@@ -232,10 +233,23 @@
   }
 
   // ---------- Local camera preview ----------
+  // Only during a call, so the camera light stays off while nobody is calling.
 
-  async function startPreview() {
+  let previewStream = null;
+  let previewWanted = false;
+  async function preview(on) {
+    if (on === previewWanted) return;
+    previewWanted = on;
+    if (!on) {
+      if (previewStream) previewStream.getTracks().forEach(t => t.stop());
+      previewStream = null;
+      $('preview').srcObject = null;
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 } }, audio: false });
+      if (!previewWanted) { stream.getTracks().forEach(t => t.stop()); return; }
+      previewStream = stream;
       $('preview').srcObject = stream;
     } catch (e) {
       $('previewNote').textContent = `No camera preview on this computer (${e.name}).`;
