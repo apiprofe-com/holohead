@@ -17,7 +17,7 @@
   let lastStats = null;
   let micLevel = 0;
   const consoles = new Set();
-  const feeds = new Map(); // viewer connection -> call forwarding Lucas's video to it
+  const feeds = new Map(); // viewer connection -> call forwarding the caller's video to it
   const retry = HH.backoff();
 
   // Class mode (office hours): students connect to a second peer id, made from the public class code.
@@ -33,7 +33,7 @@
   let speakerCall = null;     // their call to us (mic + camera)
   let speakerStream = null;
   let speakerFeeds = [];      // calls forwarding the speaker's video to the other students and consoles
-  let shareCall = null;       // Lucas's screen, sent from the console
+  let shareCall = null;       // the teacher's screen, sent from the console
   let shareStream = null;
   let mix = null;             // { ctx, dest, speakerSrc }: iMac mic + speaker, for everyone but the speaker
   const chat = [];
@@ -44,6 +44,7 @@
   }
 
   HH.keepAwake();
+  if (HH.teacher()) $('idleText').textContent = `Waiting for ${HH.teacher()}…`;
   applyCalib();
   window.addEventListener('resize', applyCalib);
   startPeer();
@@ -69,7 +70,7 @@
     $('dot').style.display = c.showDot ? 'block' : 'none';
 
     // Split screen
-    // Screensaver: while Lucas is offline the side video fills the whole screen.
+    // Screensaver: while nobody is calling the side video fills the whole screen.
     const saver = !live && c.idle === 'side' && !!c.sideUrl && !c.test;
     const split = (c.layout === 'split' || saver) && c.sideUrl;
     const side = $('sidePane');
@@ -136,7 +137,7 @@
     return M.map((row, i) => row[n] / row[i]);
   }
 
-  // ---------- Camera and mic of the iMac (so Lucas can see visitors) ----------
+  // ---------- Camera and mic of the iMac (so the caller can see visitors) ----------
   // Only on during a call, so the camera light is off while nobody is calling.
 
   async function startLocalMedia() {
@@ -266,7 +267,7 @@
     else { feeds.forEach(f => { try { f.close(); } catch (e) {} }); feeds.clear(); }
   }
 
-  // Viewers (viewer.html on the iMac screen) get a copy of Lucas's video while he's live.
+  // Viewers (viewer.html on the iMac screen) get a copy of the caller's video while they're live.
   function feedViewer(conn) {
     if (!live || !peer || feeds.has(conn) || !conn.open || !conn.metadata || conn.metadata.role !== 'viewer') return;
     const stream = $('face').srcObject;
@@ -312,7 +313,7 @@
       }
       if (msg.t === 'cmd' && msg.cmd === 'reload') location.reload();
       if (msg.t === 'class') classCommand(msg);
-      if (msg.t === 'chat') postChat('Lucas', msg.text, 'lucas');
+      if (msg.t === 'chat') postChat(HH.teacher() || 'Teacher', msg.text, 'teacher');
     });
     conn.on('close', () => detachConsole(conn));
     conn.on('error', () => detachConsole(conn));
@@ -340,8 +341,8 @@
   }
 
   // ---------- Class mode (office hours) ----------
-  // The TV shows the iMac camera (or Lucas's shared screen) and students join from class.html.
-  // This page is the hub: each student connects only to it. A student speaks only when Lucas gives
+  // The TV shows the iMac camera (or the teacher's shared screen) and students join from class.html.
+  // This page is the hub: each student connects only to it. A student speaks only when the teacher gives
   // them the floor from the console.
 
   function syncClass() {
@@ -397,7 +398,7 @@
     });
   }
 
-  // The picture everyone gets: Lucas's screen while he shares it, otherwise the iMac camera.
+  // The picture everyone gets: the teacher's screen while they share it, otherwise the iMac camera.
   function classVideoTrack() {
     if (shareStream && shareStream.getVideoTracks()[0]) return shareStream.getVideoTracks()[0];
     return localStream ? localStream.getVideoTracks()[0] : null;
@@ -467,7 +468,7 @@
       const old = students.get(s.id);
       if (old) dropStudent(old.id);
       students.set(s.id, s);
-      conn.send({ t: 'welcome', id: s.id, chat });
+      conn.send({ t: 'welcome', id: s.id, chat, teacher: HH.teacher() });
       sendClass(s);
       feedSpeaker(s);
       broadcastQueue();
@@ -607,7 +608,7 @@
     speakerFeeds.push(call);
   }
 
-  // Lucas's screen, captured by the console (it needs a click there) and sent here.
+  // The teacher's screen, captured by the console (it needs a click there) and sent here.
   function receiveShare(call) {
     const fromConsole = [...consoles].some(c => c.peer === call.peer);
     if (!classOn || !fromConsole) { call.close(); return; }

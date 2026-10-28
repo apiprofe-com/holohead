@@ -1,5 +1,5 @@
-// Viewer page (iMac screen): shows Lucas's video, forwarded by the projection, so people standing at
-// the iMac (where the camera and mic are) can see him too. Muted: the projection already plays his voice.
+// Viewer page (iMac screen): shows the caller's video, forwarded by the projection, so people standing at
+// the iMac (where the camera and mic are) can see them too. Muted: the projection already plays their voice.
 (() => {
   const $ = id => document.getElementById(id);
   const room = HH.room();
@@ -16,6 +16,7 @@
   }
 
   HH.keepAwake();
+  if (HH.teacher()) $('idleText').textContent = `${HH.teacher()} will be right back`;
   showIdle();
   connect();
 
@@ -43,8 +44,8 @@
       call.answer();
       call.on('stream', stream => {
         if (feed !== call) return;
-        $('lucas').srcObject = stream;
-        $('lucas').play().catch(() => {});
+        $('caller').srcObject = stream;
+        $('caller').play().catch(() => {});
         document.body.classList.add('live');
       });
       const end = () => { if (feed === call) { feed = null; showIdle(); } };
@@ -63,10 +64,10 @@
     reconnect.timer = setTimeout(connect, retry.next());
   }
 
-  // While Lucas is away: the same side video as the projector (the fish), or a short note.
+  // While nobody is calling: the same side video as the projector (the fish), or a short note.
   function showIdle() {
     document.body.classList.remove('live');
-    $('lucas').srcObject = null;
+    $('caller').srcObject = null;
     const url = calib.sideUrl ? HH.toEmbedUrl(calib.sideUrl) : '';
     HH.playVideo($('idleVideo'), url);
     $('idleText').style.display = url ? 'none' : 'flex';

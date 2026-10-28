@@ -8,8 +8,12 @@ ROOM=""
 # never the room code. Add it to the HOLOHEAD_ROOMS repo secret so students can use the relay.
 CLASS=""
 
-# Where the web pages live.
-BASE_URL="https://apiprofe-com.github.io/holohead"
+# Your name as students see it in office hours and the chat, e.g. "Ms. Rivera".
+TEACHER=""
+
+# Where the web pages live: your copy's GitHub Pages address, e.g.
+# "https://yourname.github.io/holohead". install.sh fills this in from your copy.
+BASE_URL=""
 
 # Leave empty to auto-detect. Set the full path if Chrome is somewhere unusual.
 CHROME_APP=""
@@ -18,7 +22,7 @@ CHROME_APP=""
 # e.g. "-1920,455" for a 1080p screen placed to the left of a 27" iMac.
 PROJ_POS=""
 
-# Lucas on the iMac screen too: "window" (big window; double-click it for full screen),
+# The caller on the iMac screen too: "window" (big window; double-click it for full screen),
 # "fullscreen" (takes over the iMac screen), or "off".
 VIEWER="window"
 

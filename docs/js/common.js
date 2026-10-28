@@ -19,7 +19,7 @@ const HH = (() => {
     tv: false, test: false, blackout: false, idle: 'glow', showDot: false,
     // Split screen: 'face' only, or 'split' (face + side pane)
     layout: 'split', faceSide: 'right', faceWidth: 50, sideUrl: CORAL_EMBED,
-    // Office hours from the classroom: the TV shows the iMac camera (or Lucas's shared screen)
+    // Office hours from the classroom: the TV shows the iMac camera (or the teacher's shared screen)
     // and students join from the public class link.
     classMode: false,
   };
@@ -63,6 +63,11 @@ const HH = (() => {
 
   const headId = r => `holohead-${r}-head`;
   const classId = c => `holohead-${c}-class`;
+
+  // The teacher's name, shown to students and in the chat. The launcher passes it as ?teacher=.
+  function teacher() {
+    return (params.get('teacher') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  }
 
   // Public class code (for the student link). Never the private room code.
   function classCode() {
@@ -247,6 +252,6 @@ const HH = (() => {
 
   return {
     KEYS, DEFAULT_CALIB, DEFAULT_SETTINGS, params,
-    load, save, room, newRoomCode, headId, classId, classCode, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, playVideo, callStats, keepAwake,
+    load, save, room, newRoomCode, headId, classId, classCode, teacher, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, playVideo, callStats, keepAwake,
   };
 })();

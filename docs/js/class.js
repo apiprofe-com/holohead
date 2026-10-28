@@ -1,5 +1,5 @@
 // Student page (office hours): watch and hear the classroom, chat, and raise a hand. The mic and
-// camera turn on only while Lucas gives this student the floor. Everything goes through the iMac
+// camera turn on only while the teacher gives this student the floor. Everything goes through the iMac
 // (the projection page), never directly to other students.
 (() => {
   const $ = id => document.getElementById(id);
@@ -157,6 +157,10 @@
     if (!msg || typeof msg !== 'object') return;
     if (msg.t === 'welcome') {
       myId = msg.id;
+      if (msg.teacher) {
+        document.title = `Office hours with ${msg.teacher}`;
+        $('roomTitle').textContent = document.title;
+      }
       retry.reset();
       $('chatLog').textContent = '';
       (msg.chat || []).forEach(addChat);

@@ -13,7 +13,7 @@
   <!-- A muted fullscreen video. ?v=<YouTube id or link>; defaults to the Coral City Camera.
        YouTube needs to know the embedding site (error 153 otherwise), hence this wrapper page. -->
   <iframe id="v" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-  <script src="js/common.js?v=9"></script>
+  <script src="js/common.js?v=10"></script>
   <script>
     const v = HH.params.get('v') || '7i8ARjIeM2k';
     HH.playVideo(document.getElementById('v'), HH.toEmbedUrl(/^[\w-]{11}$/.test(v) ? `https://youtu.be/${v}` : v));

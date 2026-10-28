@@ -21,6 +21,11 @@ if [ -z "$ROOM" ]; then
   exit 1
 fi
 
+if [ -z "$BASE_URL" ]; then
+  log "No BASE_URL set. Run install.sh, or put BASE_URL=\"https://yourname.github.io/holohead\" in $HH_DIR/config.local."
+  exit 1
+fi
+
 CHROME="$(find_chrome)" || { chrome_missing_help | tee -a "$LOG"; exit 1; }
 CHROME_BIN="$CHROME/Contents/MacOS/Google Chrome"
 FLAGS=(--no-first-run --no-default-browser-check --noerrdialogs
@@ -43,7 +48,7 @@ start_console() {
     --app="$(page_url console)" --window-position=60,60 --window-size=1400,950 >/dev/null 2>&1 &
 }
 
-# Lucas's face on the iMac screen too, for people standing at the iMac (camera and mic are there).
+# The caller's face on the iMac screen too, for people standing at the iMac (camera and mic are there).
 start_viewer() {
   [ "$VIEWER" = "off" ] && return
   local main w h mode

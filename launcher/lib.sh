@@ -5,16 +5,17 @@
 HH_DIR="${HH_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 
 # Defaults; override any of these in config.local (same folder).
-BASE_URL="https://apiprofe-com.github.io/holohead"
+BASE_URL=""          # your copy's GitHub Pages address; install.sh fills it in
 ROOM=""
 CLASS=""            # public code for the office hours student link (not the room code)
+TEACHER=""          # your name as students see it, e.g. "Ms. Rivera"
 CHROME_APP=""        # full path to "Google Chrome.app" if it's somewhere unusual
 PROJ_POS=""          # "x,y" of the projector screen, if auto-detect gets it wrong
 TURN_URLS=""         # optional relay, e.g. "turn:host:80 turns:host:443?transport=tcp"
 TURN_USER=""
 TURN_PASS=""
 FORCE_RELAY=0
-VIEWER="window"      # Lucas on the iMac screen too: window | fullscreen | off
+VIEWER="window"      # the caller on the iMac screen too: window | fullscreen | off
 DEBUG_PORT=""        # e.g. 9333 to let tools inspect the projection window (local only)
 
 [ -f "$HH_DIR/config.local" ] && . "$HH_DIR/config.local"
@@ -69,8 +70,22 @@ page_url() {
   fi
   [ "$FORCE_RELAY" = "1" ] && q="$q&relay=1"
   [ -n "$CLASS" ] && q="$q&class=$CLASS"
+  [ -n "$TEACHER" ] && q="$q&teacher=$(urlencode "$TEACHER")"
   [ -n "$extra" ] && q="$q&$extra"
   echo "$BASE_URL/$page.html?$q"
+}
+
+# GitHub Pages address of a copy of this repo, from its git remote:
+# github.com/OWNER/REPO -> https://owner.github.io/REPO
+pages_url_from_git() {
+  local remote owner repo
+  remote="$(git -C "$1" remote get-url origin 2>/dev/null)" || return 1
+  remote="${remote%.git}"
+  case "$remote" in *github.com[:/]*) ;; *) return 1 ;; esac
+  repo="${remote##*/}"
+  owner="${remote%/*}"; owner="${owner##*[:/]}"
+  [ -n "$owner" ] && [ -n "$repo" ] || return 1
+  echo "https://$(echo "$owner" | tr '[:upper:]' '[:lower:]').github.io/$repo"
 }
 
 urlencode() {

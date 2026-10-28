@@ -1,4 +1,4 @@
-// Phone page: sends Lucas's camera and mic to the head, shows the visitors.
+// Phone page: sends the caller's camera and mic to the head, shows the visitors.
 (() => {
   const $ = id => document.getElementById(id);
   const room = HH.room();

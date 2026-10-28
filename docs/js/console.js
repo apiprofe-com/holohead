@@ -113,8 +113,8 @@
       <div class="slider"><label>Face width</label><input data-key="faceWidth" type="range" min="20" max="80" step="1"><output></output></div>
       <div class="field"><label>Side video or page (YouTube links work)</label>
         <input data-key="sideUrl" type="text" placeholder="https://www.youtube.com/watch?v=…"></div>
-      <div class="field"><label>While Lucas is offline</label>
-        <select data-key="idle"><option value="glow">Soft glow (halo) on the head</option><option value="side">Side video fills the screen (screensaver)</option><option value="black">Black</option><option value="text">"Waiting for Lucas…"</option></select></div>
+      <div class="field"><label>While nobody is calling</label>
+        <select data-key="idle"><option value="glow">Soft glow (halo) on the head</option><option value="side">Side video fills the screen (screensaver)</option><option value="black">Black</option><option value="text">"Waiting…" text</option></select></div>
       <div class="field"><label>Status dot in the corner</label>
         <select data-key="showDot"><option value="false">Hidden</option><option value="true">Shown</option></select></div>`;
     card.querySelectorAll('[data-key]').forEach(el => {
@@ -235,7 +235,7 @@
     $('mic').style.width = `${Math.min(100, s.mic * 140)}%`;
     $('oneScreen').hidden = !(s.forcedTv || s.extended === false);
     $('noCam').hidden = s.cam;
-    if (!s.cam) $('noCam').textContent = `The projection can't use the iMac camera or mic, so Lucas can't see visitors. ${s.camError || ''}`;
+    if (!s.cam) $('noCam').textContent = `The projection can't use the iMac camera or mic, so the caller and students can't see the room. ${s.camError || ''}`;
   }
 
   function markStale() {
