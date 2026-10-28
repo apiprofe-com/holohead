@@ -145,8 +145,6 @@ body.viewer.live #idleVideo { visibility: hidden; }
 body.projection.class #classPane { display: block; }
 body.projection.class #stage { display: none; }
 #classVideo { width: 100%; height: 100%; object-fit: contain; background: #000; }
-body.projection #classVideo { transform: scaleX(-1); } /* like a mirror for the people in the room */
-body.projection.sharing #classVideo { transform: none; }
 
 /* ---------- Console: office hours ---------- */
 .class-link { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
