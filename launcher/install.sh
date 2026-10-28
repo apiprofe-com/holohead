@@ -25,6 +25,11 @@ if [ ! -f "$DEST/config.local" ]; then
   sed "s/^ROOM=.*/ROOM=\"$room\"/" "$DEST/config.example" > "$DEST/config.local"
   echo "New room code: $room"
 fi
+if ! grep -q '^CLASS=' "$DEST/config.local"; then
+  class="$(LC_ALL=C tr -dc 'abcdefghjkmnpqrstuvwxyz23456789' < /dev/urandom | head -c 8)"
+  printf '\n# Code for the office hours student link (not the room code).\nCLASS="%s"\n' "$class" >> "$DEST/config.local"
+  echo "New class code: $class (add it to the HOLOHEAD_ROOMS repo secret for the relay)"
+fi
 . "$DEST/config.local"
 
 # Double-clickable app that starts the launcher in the background.
@@ -53,4 +58,5 @@ echo
 echo
 echo "Phone link (open in Safari on the iPhone, then Add to Home Screen):"
 echo "  ${BASE_URL:-https://apiprofe-com.github.io/holohead}/sender.html?room=$ROOM"
+[ -n "${CLASS:-}" ] && echo "Office hours link for students: ${BASE_URL:-https://apiprofe-com.github.io/holohead}/class.html?c=$CLASS"
 echo "Start HoloHead now: double-click $DEST/HoloHead.app"

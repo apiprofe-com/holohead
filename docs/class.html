@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Office hours</title>
+<link rel="stylesheet" href="css/holohead.css?v=8">
+</head>
+<body class="student">
+  <div id="join">
+    <h1>Office hours</h1>
+    <p class="sub">Live from the classroom. You can watch, chat, and raise your hand to speak.</p>
+    <form id="joinForm" class="row" onsubmit="return false">
+      <input id="name" type="text" maxlength="40" placeholder="Your name" autocomplete="name" required>
+      <button id="joinBtn" type="submit">Join</button>
+    </form>
+    <p class="sub" id="joinNote">Your camera and mic stay off until it's your turn to speak.</p>
+  </div>
+
+  <div id="room" hidden>
+    <div id="main">
+      <video id="classVideo" autoplay playsinline></video>
+      <div id="state">Connecting…</div>
+      <div id="speakerTile" hidden><video id="speakerVideo" autoplay playsinline muted></video><span id="speakerName"></span></div>
+      <div id="selfTile" hidden><video id="selfVideo" autoplay playsinline muted></video><span>You</span></div>
+      <div id="floorBanner" hidden>You have the floor. Go ahead!
+        <button id="mute">Mute</button> <button id="done">Done</button></div>
+    </div>
+    <aside id="panel">
+      <div id="queueBox">
+        <button id="hand">✋ Raise hand</button>
+        <div id="queueInfo" class="sub"></div>
+      </div>
+      <div id="chatLog"></div>
+      <form id="chatForm" class="row" onsubmit="return false">
+        <input id="chatText" type="text" maxlength="500" placeholder="Type a message" autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+  <script src="js/common.js?v=8"></script>
+  <script src="js/class.js?v=8"></script>
+</body>
+</html>

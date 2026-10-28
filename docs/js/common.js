@@ -19,6 +19,9 @@ const HH = (() => {
     tv: false, test: false, blackout: false, idle: 'glow', showDot: false,
     // Split screen: 'face' only, or 'split' (face + side pane)
     layout: 'split', faceSide: 'right', faceWidth: 50, sideUrl: CORAL_EMBED,
+    // Office hours from the classroom: the TV shows the iMac camera (or Lucas's shared screen)
+    // and students join from the public class link.
+    classMode: false,
   };
 
   const DEFAULT_SETTINGS = { turnUrls: '', turnUser: '', turnPass: '', forceRelay: false };
@@ -59,6 +62,12 @@ const HH = (() => {
   }
 
   const headId = r => `holohead-${r}-head`;
+  const classId = c => `holohead-${c}-class`;
+
+  // Public class code (for the student link). Never the private room code.
+  function classCode() {
+    return cleanRoom(params.get('class') || params.get('c'));
+  }
 
   function settings() {
     const s = load(KEYS.settings, DEFAULT_SETTINGS);
@@ -75,28 +84,31 @@ const HH = (() => {
   // ICE servers: Google STUN, plus a TURN relay. A relay typed in by hand (or passed in the address)
   // wins; otherwise use the shared relay that a GitHub Action refreshes twice a day in turn.json,
   // encrypted with the room code so only people who know the room can use it.
-  async function iceConfig() {
+  // `code` picks the turn.json entry to unlock: the room code by default, or the class code on the
+  // student page (students never get the room code).
+  async function iceConfig(code) {
     const s = settings();
     const iceServers = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
     const turnUrls = s.turnUrls.split(/[\s,]+/).filter(Boolean);
     if (turnUrls.length) iceServers.push({ urls: turnUrls, username: s.turnUser, credential: s.turnPass });
-    else iceServers.push(...await sharedRelay());
+    else iceServers.push(...await sharedRelay(code));
     return { iceServers, iceTransportPolicy: s.forceRelay ? 'relay' : 'all' };
   }
 
-  let relayCache = { at: 0, servers: [] };
+  const relayCache = {};
 
-  async function sharedRelay() {
-    const r = room();
+  async function sharedRelay(code) {
+    const r = code || room();
     if (!r) return [];
-    if (Date.now() - relayCache.at < 30 * 60 * 1000) return relayCache.servers;
+    const cached = relayCache[r];
+    if (cached && Date.now() - cached.at < 30 * 60 * 1000) return cached.servers;
     try {
       const res = await fetch(new URL('turn.json', document.baseURI), { cache: 'no-store' });
       const file = await res.json();
       for (const entry of file.entries || []) {
         const servers = await decryptEntry(entry, r).catch(() => null);
         if (servers) {
-          relayCache = { at: Date.now(), servers };
+          relayCache[r] = { at: Date.now(), servers };
           return servers;
         }
       }
@@ -235,6 +247,6 @@ const HH = (() => {
 
   return {
     KEYS, DEFAULT_CALIB, DEFAULT_SETTINGS, params,
-    load, save, room, newRoomCode, headId, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, playVideo, callStats, keepAwake,
+    load, save, room, newRoomCode, headId, classId, classCode, settings, iceConfig, sharedRelay, backoff, toEmbedUrl, playVideo, callStats, keepAwake,
   };
 })();

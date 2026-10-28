@@ -7,6 +7,7 @@ HH_DIR="${HH_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 # Defaults; override any of these in config.local (same folder).
 BASE_URL="https://apiprofe-com.github.io/holohead"
 ROOM=""
+CLASS=""            # public code for the office hours student link (not the room code)
 CHROME_APP=""        # full path to "Google Chrome.app" if it's somewhere unusual
 PROJ_POS=""          # "x,y" of the projector screen, if auto-detect gets it wrong
 TURN_URLS=""         # optional relay, e.g. "turn:host:80 turns:host:443?transport=tcp"
@@ -67,6 +68,7 @@ page_url() {
     q="$q&turn=$(urlencode "$TURN_URLS")&turnUser=$(urlencode "$TURN_USER")&turnPass=$(urlencode "$TURN_PASS")"
   fi
   [ "$FORCE_RELAY" = "1" ] && q="$q&relay=1"
+  [ -n "$CLASS" ] && q="$q&class=$CLASS"
   [ -n "$extra" ] && q="$q&$extra"
   echo "$BASE_URL/$page.html?$q"
 }

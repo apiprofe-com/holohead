@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HoloHead Console</title>
-<link rel="stylesheet" href="css/holohead.css?v=7">
+<link rel="stylesheet" href="css/holohead.css?v=8">
 </head>
 <body>
   <div class="page">
@@ -17,6 +17,34 @@
 
     <div class="console-grid">
       <div>
+        <div class="card">
+          <h2>Office hours (class mode)</h2>
+          <div class="row">
+            <button data-toggle="classMode" id="classBtn">Class mode</button>
+            <button id="shareBtn" disabled>Share screen</button>
+            <span id="sClass" class="pill">off</span>
+          </div>
+          <p class="sub" style="margin:8px 0 0">The TV shows the classroom camera, or your screen while you share it. Students join from the link below and speak only when you give them the floor.</p>
+          <div class="class-link"><input id="classLink" type="text" readonly><button id="copyLink">Copy</button></div>
+          <div id="noClass" class="warn" hidden>No class code yet. Add <code>CLASS="somecode"</code> to config.local in the HoloHead folder, then restart HoloHead.</div>
+        </div>
+        <div class="card" id="queueCard" hidden>
+          <h2>Students <span id="sCount" class="sub"></span></h2>
+          <div id="queueList"></div>
+          <div class="row" style="margin-top:10px">
+            <button id="nextBtn">Next in line</button>
+            <button id="endBtn">End turn</button>
+          </div>
+          <div id="speakerBox" hidden><video id="speakerVideo" autoplay playsinline muted></video></div>
+        </div>
+        <div class="card" id="chatCard" hidden>
+          <h2>Chat</h2>
+          <div id="consoleChat" class="chat-log"></div>
+          <form id="consoleChatForm" class="chat-form">
+            <input id="consoleChatText" type="text" maxlength="500" placeholder="Message to everyone" autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
         <div class="card">
           <h2>Status</h2>
           <div class="stat"><span>Console link</span><span id="sLink" class="pill">connecting</span></div>
@@ -55,7 +83,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
-  <script src="js/common.js?v=7"></script>
-  <script src="js/console.js?v=7"></script>
+  <script src="js/common.js?v=8"></script>
+  <script src="js/console.js?v=8"></script>
 </body>
 </html>

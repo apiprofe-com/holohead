@@ -9,6 +9,9 @@
   let conn = null;
   let sendTimer = null;
   let lastStatusAt = 0;
+  let shareStream = null;
+  let shareCall = null;
+  let classState = null;
 
   const GROUPS = [
     ['Line up with the foam head', [
@@ -50,6 +53,7 @@
 
   buildControls();
   bindActions();
+  bindClass();
   connect();
   setInterval(() => { if (Date.now() - lastStatusAt > 4000) markStale(); }, 2000);
 
@@ -146,7 +150,7 @@
     $('reload').addEventListener('click', () => send({ t: 'cmd', cmd: 'reload' }));
     $('reset').addEventListener('click', () => {
       if (!confirm('Reset all calibration to the defaults? (Layout and side video are kept.)')) return;
-      const keep = { layout: calib.layout, faceSide: calib.faceSide, faceWidth: calib.faceWidth, sideUrl: calib.sideUrl, idle: calib.idle };
+      const keep = { layout: calib.layout, faceSide: calib.faceSide, faceWidth: calib.faceWidth, sideUrl: calib.sideUrl, idle: calib.idle, classMode: calib.classMode };
       calib = { ...HH.DEFAULT_CALIB, ...keep };
       buildControls();
       push();
@@ -183,12 +187,22 @@
       conn.on('close', reconnect);
       conn.on('error', reconnect);
     });
+    // The projection sends the current speaker's camera here during office hours.
+    peer.on('call', call => {
+      if (!call.metadata || call.metadata.role !== 'speaker') { call.close(); return; }
+      call.answer();
+      call.on('stream', stream => { $('speakerVideo').srcObject = stream; $('speakerBox').hidden = false; });
+      const end = () => { $('speakerVideo').srcObject = null; $('speakerBox').hidden = true; };
+      call.on('close', end);
+      call.on('error', end);
+    });
     peer.on('error', reconnect);
     peer.on('disconnected', () => { if (!conn || !conn.open) reconnect(); });
   }
 
   function reconnect() {
     pill('sLink', 'projection not reachable, retrying', 'bad');
+    stopShare();
     if (peer) { try { peer.destroy(); } catch (e) {} peer = null; conn = null; }
     clearTimeout(reconnect.timer);
     reconnect.timer = setTimeout(connect, retry.next());
@@ -202,6 +216,8 @@
       buildControls();
     }
     if (msg.t === 'status') showStatus(msg);
+    if (msg.t === 'chatHistory') { $('consoleChat').textContent = ''; (msg.chat || []).forEach(addChat); }
+    if (msg.t === 'chat') addChat(msg.msg);
   }
 
   function showStatus(s) {
@@ -214,7 +230,8 @@
     $('sLoss').textContent = s.live ? `${st.lossPct || 0}%` : '—';
     $('sRes').textContent = s.live && st.res ? st.res : '—';
     $('sRtt').textContent = s.live && st.rtt != null ? `${st.rtt} ms` : '—';
-    preview(s.live);
+    preview(s.live || !!(s.class && s.class.on));
+    showClass(s.class);
     $('mic').style.width = `${Math.min(100, s.mic * 140)}%`;
     $('oneScreen').hidden = !(s.forcedTv || s.extended === false);
     $('noCam').hidden = s.cam;
@@ -230,6 +247,124 @@
     const el = $(id);
     el.textContent = text;
     el.className = `pill ${cls || ''}`;
+  }
+
+  // ---------- Office hours (class mode) ----------
+
+  function bindClass() {
+    $('copyLink').addEventListener('click', () => {
+      const link = $('classLink').value;
+      if (!link) return;
+      (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).catch(() => {
+        $('classLink').select();
+        document.execCommand('copy');
+      });
+      $('copyLink').textContent = 'Copied';
+      setTimeout(() => { $('copyLink').textContent = 'Copy'; }, 1500);
+    });
+    $('nextBtn').addEventListener('click', () => send({ t: 'class', cmd: 'next' }));
+    $('endBtn').addEventListener('click', () => send({ t: 'class', cmd: 'end' }));
+    $('shareBtn').addEventListener('click', () => (shareStream ? stopShare() : startShare()));
+    $('consoleChatForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = $('consoleChatText').value.trim();
+      if (!text) return;
+      send({ t: 'chat', text });
+      $('consoleChatText').value = '';
+    });
+  }
+
+  function showClass(c) {
+    if (!c) return;
+    classState = c;
+    $('classLink').value = c.code ? new URL(`class.html?c=${c.code}`, location.href).href : '';
+    $('noClass').hidden = !!c.code;
+    pill('sClass', c.on ? (c.peer === 'ready' ? `open · ${c.students.length} of ${c.max}` : 'opening…') : 'off',
+      c.on ? (c.peer === 'ready' ? 'good' : 'warn') : '');
+    $('shareBtn').disabled = !c.on;
+    if (!c.on && shareStream) stopShare();
+    $('shareBtn').classList.toggle('on', !!shareStream);
+    $('shareBtn').textContent = shareStream ? 'Stop sharing' : 'Share screen';
+    $('queueCard').hidden = $('chatCard').hidden = !c.on;
+    if (!c.speakerLive) { $('speakerBox').hidden = true; $('speakerVideo').srcObject = null; }
+    $('sCount').textContent = c.on ? `(${c.students.length} here, ${c.queue.length} waiting)` : '';
+    $('endBtn').disabled = !c.floor;
+    $('nextBtn').disabled = !c.queue.length;
+    renderQueue(c);
+  }
+
+  // Speaker first, then raised hands in order, then everyone else.
+  function renderQueue(c) {
+    const byId = new Map(c.students.map(s => [s.id, s]));
+    const order = [c.floor, ...c.queue, ...c.students.map(s => s.id)].filter((id, i, a) => id && byId.has(id) && a.indexOf(id) === i);
+    const key = JSON.stringify([order, c.floor, c.queue]);
+    if (renderQueue.key === key) return;
+    renderQueue.key = key;
+    const list = $('queueList');
+    list.textContent = '';
+    if (!order.length) { list.innerHTML = '<p class="sub" style="margin:0">Nobody has joined yet.</p>'; return; }
+    for (const id of order) {
+      const s = byId.get(id);
+      const row = document.createElement('div');
+      row.className = `queue-row${id === c.floor ? ' speaking' : ''}`;
+      const who = document.createElement('span');
+      who.className = 'who';
+      const pos = c.queue.indexOf(id);
+      who.textContent = `${id === c.floor ? '🎙 ' : pos >= 0 ? `✋ ${pos + 1}. ` : ''}${s.name}`;
+      row.appendChild(who);
+      if (id !== c.floor) row.appendChild(button('Give floor', () => send({ t: 'class', cmd: 'floor', id })));
+      row.appendChild(button('Remove', () => {
+        if (confirm(`Remove ${s.name} from office hours?`)) send({ t: 'class', cmd: 'remove', id });
+      }));
+      list.appendChild(row);
+    }
+  }
+
+  function button(text, onClick) {
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  // Screen sharing needs a click in a normal window, so it happens here and goes to the projection.
+  async function startShare() {
+    if (!peer || !conn || !conn.open) return;
+    try {
+      shareStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 15 } }, audio: false });
+    } catch (e) {
+      shareStream = null;
+      return;
+    }
+    shareStream.getVideoTracks()[0].addEventListener('ended', stopShare); // Chrome's own "Stop sharing" bar
+    shareCall = peer.call(HH.headId(room), shareStream, { metadata: { role: 'share' } });
+    shareCall.on('close', stopShare);
+    shareCall.on('error', stopShare);
+    if (classState) showClass(classState);
+  }
+
+  function stopShare() {
+    const call = shareCall, stream = shareStream;
+    shareCall = shareStream = null;
+    if (call) { send({ t: 'class', cmd: 'stopShare' }); try { call.close(); } catch (e) {} }
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (classState) showClass(classState);
+  }
+
+  function addChat(m) {
+    if (!m || !m.text) return;
+    const row = document.createElement('div');
+    row.className = `msg ${m.from || ''}`;
+    const who = document.createElement('b');
+    who.textContent = m.name || '';
+    const time = document.createElement('time');
+    time.textContent = m.at ? new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    const text = document.createElement('span');
+    text.textContent = m.text;
+    row.append(who, time, text);
+    const log = $('consoleChat');
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
   }
 
   // ---------- Local camera preview ----------

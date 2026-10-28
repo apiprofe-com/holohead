@@ -4,6 +4,10 @@
 # Room code shared with the phone. Keep it private: anyone with it can call the head.
 ROOM=""
 
+# Code for the office hours student link (class.html?c=CODE). Students get only this one,
+# never the room code. Add it to the HOLOHEAD_ROOMS repo secret so students can use the relay.
+CLASS=""
+
 # Where the web pages live.
 BASE_URL="https://apiprofe-com.github.io/holohead"
 

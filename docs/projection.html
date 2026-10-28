@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HoloHead Projection</title>
-<link rel="stylesheet" href="css/holohead.css?v=7">
+<link rel="stylesheet" href="css/holohead.css?v=8">
 </head>
 <body class="projection">
   <div id="stage">
@@ -28,13 +28,15 @@
       <div id="idleText">Waiting for Lucas…</div>
     </div>
   </div>
+  <div id="classPane"><video id="classVideo" autoplay playsinline muted></video></div>
+  <audio id="speakerAudio" autoplay></audio>
   <div id="blackout"></div>
   <div id="dot"></div>
   <button id="soundPrompt" hidden>Click anywhere to turn on sound</button>
   <div id="notice" hidden></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
-  <script src="js/common.js?v=7"></script>
-  <script src="js/projection.js?v=7"></script>
+  <script src="js/common.js?v=8"></script>
+  <script src="js/projection.js?v=8"></script>
 </body>
 </html>

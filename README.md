@@ -12,6 +12,8 @@ installs nothing system-wide, and never needs an admin password.
   students standing at the iMac (where the camera and mic are) see him too. It shows the side video
   while he's away. Double-click for full screen. Set `VIEWER` in `config.local` to `window`,
   `fullscreen` or `off`.
+- **Students (office hours):** `class.html?c=CLASS`. A Zoom-like page: they watch and hear the
+  classroom, chat, and raise a hand to speak. It uses its own **class code**, never the room code.
 - **iMac screen, for you:** `console.html?room=CODE`. Status, camera preview, and every calibration
   control. It also works from a laptop or phone standing next to the head.
 
@@ -117,6 +119,33 @@ Under **Screen layout**:
   Lucas…".
 
 **Black-out** blanks the whole projector instantly.
+
+## Office hours (class mode)
+
+The **Class mode** button on the console turns the setup into live office hours from the classroom:
+
+- **The TV** shows the iMac camera instead of the face and fish. While you share your screen, it
+  shows your screen instead. The iMac camera and mic are on for as long as class mode is on.
+- **Students** open the student link, shown on the console with a Copy button
+  (`class.html?c=CLASS`). They type a name and join. They see and hear the classroom, can chat, and
+  tap **Raise hand**. Their camera and mic stay off.
+- **Taking turns:** the console lists everyone, with raised hands in order.
+  - **Give floor** (or **Next in line**) turns that one student's mic and camera on. Their voice
+    comes out of the iMac speakers, and the other students hear and see them too.
+  - **End turn**, or the student's **Done** button, turns them off again.
+  - **Remove** sends someone out.
+- **Share screen** (console) shares the iMac screen with the TV and the students. Chrome asks which
+  screen or window to share.
+- Up to **5 students** at once: the iMac sends the class to each one directly. A 6th gets "the room
+  is full".
+- Turning class mode off (or any restart of HoloHead) ends office hours. The camera turns off, and
+  the face and fish come back. Students then see "Office hours are closed", and the page joins by
+  itself when you open them again.
+
+The class code is `CLASS` in `config.local`. Add it to the `HOLOHEAD_ROOMS` secret too, so
+students on cellular or campus networks can use the relay. Anyone with the student link can watch
+while class mode is on, so point the camera at the front of the room. Nothing is recorded. To make
+a new link, change `CLASS` (and the secret) and restart HoloHead.
 
 ## Network test checklist
 

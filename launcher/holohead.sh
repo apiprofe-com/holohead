@@ -71,6 +71,7 @@ start_projection() {
 }
 
 log "Starting HoloHead (room $ROOM, Chrome at $CHROME)."
+[ -n "$CLASS" ] && log "Office hours link for students: $BASE_URL/class.html?c=$CLASS"
 start_projection
 sleep 3
 start_console
